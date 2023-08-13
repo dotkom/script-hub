@@ -47,26 +47,26 @@ function processApplicants(applicants, committeeColumns, headers) {
         var addedCommittees = [];
         for (let keyword in committeeColumns) {
             let col = committeeColumns[keyword];
-            let name = applicant[col];
+            let committee = applicant[col];
 
             /* If Backlog or FeminIT is checked off, register the applicant for that committee */
             if (keyword === "Backlog" || keyword === "FeminIT") {
-                if (name.includes("ønsker å søke verv")) {
-                    name = keyword;
+                if (committee.includes("ønsker å søke verv")) {
+                    committee = keyword;
                 } else {
                     continue;
                 }
             }
 
-            if (name && !addedCommittees.includes(name)) {
-                let existingFile = folder.getFilesByName(name).hasNext();
+            if (committee && !addedCommittees.includes(committee)) {
+                let existingFile = folder.getFilesByName(committee).hasNext();
                 var ss;
                 if (existingFile) {
                     ss = SpreadsheetApp.open(
-                        folder.getFilesByName(name).next(),
+                        folder.getFilesByName(committee).next(),
                     );
                 } else {
-                    ss = SpreadsheetApp.create(name);
+                    ss = SpreadsheetApp.create(committee);
                     var fileId = ss.getId();
                     var file = DriveApp.getFileById(fileId);
                     file.moveTo(folder);
@@ -103,7 +103,7 @@ function processApplicants(applicants, committeeColumns, headers) {
                                     ),
                             ),
                         );
-                        addedCommittees.push(name);
+                        addedCommittees.push(committee);
                     }
                 } else {
                     sheet.appendRow(
@@ -112,7 +112,7 @@ function processApplicants(applicants, committeeColumns, headers) {
                                 !Object.values(committeeColumns).includes(idx),
                         ),
                     );
-                    addedCommittees.push(name);
+                    addedCommittees.push(committee);
                 }
             }
         }

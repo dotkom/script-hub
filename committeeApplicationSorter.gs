@@ -2,7 +2,7 @@
  *  This script serves to automatically sort committee applications into separate spreadsheets
  *  for the respective committees. To use it, create a form for submitting applications (copy an old one),
  *  connect a spreadsheet to the form, add a "Google Apps-script" extention to the sheet, paste the following
- *  code into a .gs file and run setUpTrigger(). The sheets will now automatically update whenever a new
+ *  code into a .gs file and run setUpTrigger() ONCE. The sheets will now automatically update whenever a new
  *  application is submitted
  */
 
@@ -14,32 +14,42 @@ function updateCommitteesAndGroups() {
     var headers = data[0];
     var applicants = data.slice(1);
 
+    /* The columns containing committes the applicant applied for */
     var committeeColumns = {
         førstevalg: headers.findIndex((col) =>
-            col.toLowerCase().includes("førstevalg")
+            col.toLowerCase().includes("førstevalg"),
         ),
         andrevalg: headers.findIndex((col) =>
-            col.toLowerCase().includes("andrevalg")
+            col.toLowerCase().includes("andrevalg"),
         ),
         tredjevalg: headers.findIndex((col) =>
-            col.toLowerCase().includes("tredjevalg")
+            col.toLowerCase().includes("tredjevalg"),
         ),
-        Backlog: headers.findIndex((col) => col.toLowerCase().includes("backlog")),
-        FeminIT: headers.findIndex((col) => col.toLowerCase().includes("feminit")),
+        Backlog: headers.findIndex((col) =>
+            col.toLowerCase().includes("backlog"),
+        ),
+        FeminIT: headers.findIndex((col) =>
+            col.toLowerCase().includes("feminit"),
+        ),
     };
 
     processApplicants(applicants, committeeColumns, headers);
 }
 
 function processApplicants(applicants, committeeColumns, headers) {
-    var folder = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId()).getParents().next();
+    var folder = DriveApp.getFileById(
+        SpreadsheetApp.getActiveSpreadsheet().getId(),
+    )
+        .getParents()
+        .next();
 
-    applicants.forEach(function(applicant) {
+    applicants.forEach(function (applicant) {
         var addedCommittees = [];
         for (let keyword in committeeColumns) {
             let col = committeeColumns[keyword];
             let name = applicant[col];
 
+            /* If Backlog or FeminIT is checked off, register the applicant for that committee */
             if (keyword === "Backlog" || keyword === "FeminIT") {
                 if (name.includes("ønsker å søke verv")) {
                     name = keyword;
@@ -52,7 +62,9 @@ function processApplicants(applicants, committeeColumns, headers) {
                 let existingFile = folder.getFilesByName(name).hasNext();
                 var ss;
                 if (existingFile) {
-                    ss = SpreadsheetApp.open(folder.getFilesByName(name).next());
+                    ss = SpreadsheetApp.open(
+                        folder.getFilesByName(name).next(),
+                    );
                 } else {
                     ss = SpreadsheetApp.create(name);
                     var fileId = ss.getId();
@@ -60,38 +72,45 @@ function processApplicants(applicants, committeeColumns, headers) {
                     file.moveTo(folder);
                 }
                 let sheets = ss.getSheets();
-                let sheet = sheets[0]; // Gets the first (primary) sheet
+                let sheet = sheets[0];
 
-                if (sheet.getLastRow() === 0) { // Check if the sheet is empty
+                /* The header filters out which committees an applicant applied for, so the recieving committee can't see the how they're prioritized */
+                if (sheet.getLastRow() === 0) {
                     sheet.appendRow(
                         headers.filter(
-                            (_, idx) => !Object.values(committeeColumns).includes(idx)
-                        )
+                            (_, idx) =>
+                                !Object.values(committeeColumns).includes(idx),
+                        ),
                     );
                 }
 
-
                 var emailCol = headers.findIndex((col) =>
-                    col.toLowerCase().includes("e-postadresse")
+                    col.toLowerCase().includes("e-postadresse"),
                 );
                 var numRows = sheet.getLastRow() - 1;
                 if (numRows >= 1) {
                     var existingApplicants = sheet
                         .getRange(2, emailCol + 1, numRows, 1)
                         .getValues();
-                    if (!existingApplicants.flat().includes(applicant[emailCol])) {
+                    if (
+                        !existingApplicants.flat().includes(applicant[emailCol])
+                    ) {
                         sheet.appendRow(
                             applicant.filter(
-                                (_, idx) => !Object.values(committeeColumns).includes(idx)
-                            )
+                                (_, idx) =>
+                                    !Object.values(committeeColumns).includes(
+                                        idx,
+                                    ),
+                            ),
                         );
                         addedCommittees.push(name);
                     }
                 } else {
                     sheet.appendRow(
                         applicant.filter(
-                            (_, idx) => !Object.values(committeeColumns).includes(idx)
-                        )
+                            (_, idx) =>
+                                !Object.values(committeeColumns).includes(idx),
+                        ),
                     );
                     addedCommittees.push(name);
                 }
@@ -99,7 +118,6 @@ function processApplicants(applicants, committeeColumns, headers) {
         }
     });
 }
-
 
 function setUpTrigger() {
     ScriptApp.newTrigger("updateCommitteesAndGroups")

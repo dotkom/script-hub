@@ -34,6 +34,9 @@ function updateCommitteesAndGroups() {
         Revyen: headers.findIndex((col) => 
             col.toLowerCase().includes("revyen"),
         ),
+        Realfagskjelleren: headers.findIndex((col) => 
+            col.toLowerCase().includes("realfagskjelleren"),
+        ),
     };
 
     processApplicants(applicants, committeeColumns, headers);
@@ -52,8 +55,8 @@ function processApplicants(applicants, committeeColumns, headers) {
             let col = committeeColumns[keyword];
             let committee = applicant[col];
 
-            /* If Backlog, FeminIT or Revyen is checked off, register the applicant for that committee */
-            if (keyword === "Backlog" || keyword === "FeminIT" || keyword === "Revyen") {
+            /* If Backlog, FeminIT, Revyen or Realfagskjelleren is checked off, register the applicant for that committee */
+            if (keyword === "Backlog" || keyword === "FeminIT" || keyword === "Revyen" || keyword === "Realfagskjelleren") {
                 if (committee.includes("ønsker å søke verv")) {
                     committee = keyword;
                 } else {
